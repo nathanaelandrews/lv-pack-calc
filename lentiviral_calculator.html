@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lentiviral Packaging Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .instructions {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196F3;
+        }
+        .input-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+        label {
+            font-weight: bold;
+            min-width: 200px;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .result-row {
+            background-color: #fff3cd;
+        }
+        .note {
+            font-style: italic;
+            color: #666;
+            margin-top: 10px;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lentiviral Packaging Calculator</h1>
+        
+        <div class="instructions">
+            <h3>How to Use:</h3>
+            <ol>
+                <li>Enter the total amount of DNA you want to transfect (typically 20 μg for 10cm dish)</li>
+                <li>Input the size of each plasmid in base pairs (bp)</li>
+                <li>Input the concentration of each plasmid stock (ng/μL)</li>
+                <li>The calculator will determine the mass and volume needed for equimolar ratios</li>
+                <li>Use the calculated volumes for your transfection</li>
+            </ol>
+        </div>
+
+        <div class="input-section">
+            <h3>Input Parameters:</h3>
+            <div class="input-group">
+                <label>Total DNA Amount (μg):</label>
+                <input type="number" id="totalDNA" value="20" step="0.1">
+            </div>
+        </div>
+
+        <table id="calculatorTable">
+            <thead>
+                <tr>
+                    <th>Plasmid Name</th>
+                    <th>Size (bp)</th>
+                    <th>Concentration (ng/μL)</th>
+                    <th>Molecular Weight (g/mol)</th>
+                    <th>Molar Ratio</th>
+                    <th>Mass Needed (μg)</th>
+                    <th>Volume Needed (μL)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>psPAX2 (Packaging)</td>
+                    <td><input type="number" class="size-input" value="10709" data-plasmid="psPax2"></td>
+                    <td><input type="number" class="conc-input" value="1000" data-plasmid="psPax2"></td>
+                    <td class="mw-display">-</td>
+                    <td class="ratio-display">1</td>
+                    <td class="mass-display">-</td>
+                    <td class="volume-display">-</td>
+                </tr>
+                <tr>
+                    <td>pMD2.G (Envelope)</td>
+                    <td><input type="number" class="size-input" value="5822" data-plasmid="pMD2G"></td>
+                    <td><input type="number" class="conc-input" value="1000" data-plasmid="pMD2G"></td>
+                    <td class="mw-display">-</td>
+                    <td class="ratio-display">1</td>
+                    <td class="mass-display">-</td>
+                    <td class="volume-display">-</td>
+                </tr>
+                <tr>
+                    <td>Transfer Vector</td>
+                    <td><input type="number" class="size-input" value="14511" data-plasmid="transfer"></td>
+                    <td><input type="number" class="conc-input" value="1000" data-plasmid="transfer"></td>
+                    <td class="mw-display">-</td>
+                    <td class="ratio-display">1</td>
+                    <td class="mass-display">-</td>
+                    <td class="volume-display">-</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="warning">
+            <strong>Note:</strong> This calculator assumes equimolar ratios (1:1:1). Some protocols use different ratios like 4:3:1 (transfer:packaging:envelope). The standard approach is 10 μg transfer vector, 7.5 μg packaging, 2.5 μg envelope for mass-based ratios.
+        </div>
+
+        <div style="text-align: center; margin: 20px 0;">
+            <button id="downloadBtn" style="background: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+                📄 Download Results as CSV
+            </button>
+        </div>
+
+        <div class="note">
+            <strong>Molecular Weight Calculation:</strong> MW = (Size in bp) × 650 g/mol/bp (average molecular weight per base pair for double-stranded DNA)
+        </div>
+    </div>
+
+    <script>
+        function calculateValues() {
+            const totalDNA = parseFloat(document.getElementById('totalDNA').value) || 20;
+            const sizeInputs = document.querySelectorAll('.size-input');
+            const concInputs = document.querySelectorAll('.conc-input');
+            
+            let totalMolarWeight = 0;
+            const plasmidData = [];
+            
+            // First pass: calculate molecular weights and total
+            sizeInputs.forEach((input, index) => {
+                const size = parseFloat(input.value) || 0;
+                const concentration = parseFloat(concInputs[index].value) || 1000;
+                const mw = size * 650; // 650 g/mol per base pair
+                
+                plasmidData.push({
+                    size: size,
+                    concentration: concentration,
+                    mw: mw
+                });
+                
+                totalMolarWeight += mw;
+            });
+            
+            // Second pass: calculate mass and volume for each plasmid
+            plasmidData.forEach((data, index) => {
+                const massFraction = data.mw / totalMolarWeight;
+                const massNeeded = (totalDNA * massFraction);
+                const volumeNeeded = (massNeeded * 1000) / data.concentration; // Convert μg to ng for volume calc
+                
+                // Update display
+                document.querySelectorAll('.mw-display')[index].textContent = data.mw.toExponential(2);
+                document.querySelectorAll('.mass-display')[index].textContent = massNeeded.toFixed(2);
+                document.querySelectorAll('.volume-display')[index].textContent = volumeNeeded.toFixed(1);
+            });
+        }
+        
+        function downloadCSV() {
+            const totalDNA = parseFloat(document.getElementById('totalDNA').value) || 20;
+            const date = new Date().toLocaleDateString();
+            
+            // Get all the calculated values
+            const plasmidNames = ['psPAX2 (Packaging)', 'pMD2.G (Envelope)', 'Transfer Vector'];
+            const sizes = Array.from(document.querySelectorAll('.size-input')).map(input => input.value);
+            const concentrations = Array.from(document.querySelectorAll('.conc-input')).map(input => input.value);
+            const masses = Array.from(document.querySelectorAll('.mass-display')).map(cell => cell.textContent);
+            const volumes = Array.from(document.querySelectorAll('.volume-display')).map(cell => cell.textContent);
+            
+            // Create CSV content
+            let csvContent = "Lentiviral Packaging Calculator Results\n";
+            csvContent += `Date: ${date}\n`;
+            csvContent += `Total DNA Amount: ${totalDNA} μg\n`;
+            csvContent += `Ratio: 1:1:1 (equimolar)\n\n`;
+            csvContent += "Plasmid Name,Size (bp),Concentration (ng/μL),Mass Needed (μg),Volume Needed (μL)\n";
+            
+            for (let i = 0; i < plasmidNames.length; i++) {
+                csvContent += `${plasmidNames[i]},${sizes[i]},${concentrations[i]},${masses[i]},${volumes[i]}\n`;
+            }
+            
+            // Add protocol summary
+            csvContent += "\nProtocol Summary:\n";
+            csvContent += "1. Add calculated volumes to transfection mix\n";
+            csvContent += "2. Transfect HEK293T cells using standard protocol\n";
+            csvContent += "3. Harvest virus 24-48h post-transfection\n";
+            
+            // Create and download file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `lentiviral_packaging_${date.replace(/\//g, '-')}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Add event listeners
+        document.getElementById('totalDNA').addEventListener('input', calculateValues);
+        document.querySelectorAll('.size-input, .conc-input').forEach(input => {
+            input.addEventListener('input', calculateValues);
+        });
+        document.getElementById('downloadBtn').addEventListener('click', downloadCSV);
+        
+        // Initial calculation
+        calculateValues();
+    </script>
+</body>
+</html>
